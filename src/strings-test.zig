@@ -52,3 +52,66 @@ test "indexOfT" {
     try expectEqual(@as(?usize, 2), strings.indexOfT(u32, &str, &substr));
     try expectEqual(@as(?usize, null), strings.indexOfT(u32, &str, &[_]u32{ 6, 7 }));
 }
+
+test "split - basic functionality" {
+    const str = "apple,banana,cherry";
+    var iter = strings.split(str, ",");
+
+    try expectEqualStrings("apple", iter.first());
+    try expectEqualStrings("banana", iter.next().?);
+    try expectEqualStrings("cherry", iter.next().?);
+    try expectEqual(@as(?[]const u8, null), iter.next());
+}
+
+test "split - empty string" {
+    const str = "";
+    var iter = strings.split(str, ",");
+
+    try expectEqualStrings("", iter.first());
+    try expectEqual(@as(?[]const u8, null), iter.next());
+}
+
+test "split - no delimiter" {
+    const str = "hello";
+    var iter = strings.split(str, ",");
+
+    try expectEqualStrings("hello", iter.first());
+    try expectEqual(@as(?[]const u8, null), iter.next());
+}
+
+test "split - multiple consecutive delimiters" {
+    const str = "a,,b,,,c";
+    var iter = strings.split(str, ",");
+
+    try expectEqualStrings("a", iter.first());
+    try expectEqualStrings("", iter.next().?);
+    try expectEqualStrings("b", iter.next().?);
+    try expectEqualStrings("", iter.next().?);
+    try expectEqualStrings("", iter.next().?);
+    try expectEqualStrings("c", iter.next().?);
+    try expectEqual(@as(?[]const u8, null), iter.next());
+}
+
+test "split - reset functionality" {
+    const str = "1:2:3";
+    var iter = strings.split(str, ":");
+
+    try expectEqualStrings("1", iter.first());
+    try expectEqualStrings("2", iter.next().?);
+    iter.reset();
+    try expectEqualStrings("1", iter.next().?);
+    try expectEqualStrings("2", iter.next().?);
+    try expectEqualStrings("3", iter.next().?);
+    try expectEqual(@as(?[]const u8, null), iter.next());
+}
+
+test "split - rest functionality" {
+    const str = "a:b:c:d";
+    var iter = strings.split(str, ":");
+
+    try expectEqualStrings("a", iter.first());
+    try expectEqualStrings("b", iter.next().?);
+    try expectEqualStrings("c:d", iter.rest());
+    try expectEqualStrings("c", iter.next().?);
+    try expectEqualStrings("d", iter.rest());
+}
